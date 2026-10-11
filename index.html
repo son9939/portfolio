@@ -108,6 +108,30 @@ section{padding-block:40px;border-top:1px solid var(--line)}
 .off-top{transform:translateY(-140%);opacity:0}
 .off-bottom{transform:translateY(140%);opacity:0}
 .faded{opacity:0}
+.screen.am{background:#F8FBFB;color:#2F2F2F}
+.am-layer{position:absolute;inset:0;padding:14px 14px 0;transition:opacity .45s}
+.am-status{font-size:11px;font-weight:600;text-align:left;margin-bottom:16px}
+.am-hi{font-size:16px;font-weight:700}
+.am-sub{font-size:11px;color:#8B9494;margin-top:2px}
+.am-live{margin-top:16px;background:#4EC4BE;color:#fff;border-radius:16px;padding:14px}
+.am-live-t{font-size:11px;opacity:.9}
+.am-timer{font-family:var(--font-mono);font-size:24px;font-weight:500;margin-top:2px;font-variant-numeric:tabular-nums}
+.am-gauge{display:flex;justify-content:space-between;font-size:11px;margin-top:8px}
+.am-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.35);margin-top:4px;overflow:hidden}
+.am-bar i{display:block;height:100%;background:#fff;border-radius:3px}
+.am-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.am-stats div{background:#fff;border:1px solid #E9EFEF;border-radius:12px;padding:8px 10px;font-size:10px;color:#8B9494}
+.am-stats b{display:block;color:#2F2F2F;font-size:16px;margin-top:2px;transition:color .3s}
+.am-stats b.up{color:#3AA9A3}
+.am-sns{background:#1f1f22;color:#fff}
+.am-status.dark{color:#fff}
+.am-feed-top{font-weight:700;font-size:14px;margin-bottom:10px}
+.am-post{height:28%;border-radius:12px;background:linear-gradient(135deg,#3a3a40,#2a2a2e);margin-bottom:10px}
+.am-post.short{height:14%}
+.am-banner .now{color:#8B9494;font-weight:400}
+.am-msg{margin-top:4px;font-size:12px;font-weight:600}
+.am-back{margin-top:8px;text-align:center;background:#4EC4BE;color:#fff;border-radius:10px;padding:6px 0;font-weight:600;transition:background .2s}
+.am-back.press{background:#3AA9A3}
 /* pipeline demo */
 .pipe{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
 .pipe-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
@@ -185,25 +209,76 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
       <div class="txt">
         <span class="owner">류연진</span>
         <h3>아맞다 — 목적 상기 서비스</h3>
-        <p class="meta">2026 일상뒤집기 AI 어플 아이디어 공모전 참가 · 2026 제작 및 배포</p>
+        <p class="meta">2026 일상뒤집기 AI 어플 아이디어 공모전 참가 · UI 프로토타입 제작 및 배포</p>
         <ul>
           <li>스마트폰 사용 중 학습 집중력이 흐트러지는 문제에서 출발</li>
-          <li>사용 목적을 다시 떠올리게 하는 서비스를 기획하고 프로토타입 개발</li>
+          <li>학습 중 주의분산 앱을 열면 "원래 하려던 일"을 떠올리게 하는 알림</li>
+          <li>알림 대상 앱, 알림 시간, 학습 종료 방식을 사용자가 직접 설정</li>
+          <li>학습 세션을 바탕으로 집중 시간, 복귀 시간, 이탈 앱을 보여주는 집중 리포트</li>
         </ul>
-        <div class="links"><a class="btn" href="https://amadda.netlify.app/" target="_blank" rel="noopener">프로토타입 열기 ↗</a></div>
+        <div class="links">
+          <a class="btn" href="https://homegle.co.kr/user/f/d?encFeedSeq=0R0-39JhGEakmDV9jjUHfhCIqWwHU5ebcvTht6i_IUo" target="_blank" rel="noopener">공모전 출품 글 ↗</a>
+          <a class="btn" href="https://amadda.netlify.app/" target="_blank" rel="noopener">프로토타입 열기 ↗</a>
+        </div>
       </div>
+      <div class="stage">
+        <div class="phone" aria-label="아맞다 시연 화면">
+          <div class="screen am" id="amadda">
+            <div class="am-layer am-study" id="amStudy">
+              <div class="am-status">9:41</div>
+              <div class="am-hi">안녕하세요, 아치님 👋</div>
+              <div class="am-sub">오늘도 목적을 잊지 않도록 도와드릴게요.</div>
+              <div class="am-live">
+                <div class="am-live-t">현재 학습 중</div>
+                <div class="am-timer" id="amTimer">00:42:17</div>
+                <div class="am-gauge"><span>AI 집중 상태</span><b>92%</b></div>
+                <div class="am-bar"><i style="width:92%"></i></div>
+              </div>
+              <div class="am-stats">
+                <div><span>오늘 기억해낸 횟수</span><b id="amCount">3회</b></div>
+                <div><span>이번 주</span><b>12회</b></div>
+              </div>
+            </div>
+            <div class="am-layer am-sns faded" id="amSns">
+              <div class="am-status dark">9:41</div>
+              <div class="am-feed-top">SNS 앱</div>
+              <div class="am-post"></div>
+              <div class="am-post short"></div>
+              <div class="am-post"></div>
+            </div>
+            <div class="banner am-banner off-top" id="amBanner">
+              <div class="t"><span>아맞다</span><span class="now">지금</span></div>
+              <div class="am-msg">👀 아맞다! 원래 하려던 일이 있었지 않았나요?</div>
+              <div class="am-back" id="amBack">아맞다로 돌아가기</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="work">
       <div class="txt">
         <span class="owner">류연진</span>
         <h3>AI·메타버스 역사·국어 융합 교구</h3>
         <p class="meta">AIEdu 챌린지그룹 2기 · 2022~2023</p>
         <ul>
-          <li>관계추출기, 알고리즘, 텍스트 마이닝을 활용한 융합 수업지도안 설계</li>
+          <li>AI와 메타버스를 활용한 역사·국어 융합 수업지도안 설계 및 교구 제작</li>
+          <li>관계추출기, 알고리즘, 텍스트 마이닝 활용</li>
           <li>노코드 메타버스 플랫폼 ZEP으로 실습형 학습 교구 개발</li>
         </ul>
-        <div class="links"><a class="btn" href="https://zep.us/play/2RZnYV" target="_blank" rel="noopener">ZEP 교구 열기 ↗</a></div>
+        <div class="links"><a class="btn" href="https://zep.us/play/2RZnY" target="_blank" rel="noopener">ZEP 교구 열기 ↗</a></div>
+      </div>
+      <div class="pipe" aria-label="융합 교구에 활용한 기술">
+        <div class="pipe-steps">
+          <div class="step"><b>AI</b>관계추출기</div>
+          <div class="step"><b>AI</b>알고리즘</div>
+          <div class="step"><b>AI</b>텍스트 마이닝</div>
+          <div class="step on"><b>노코드</b>ZEP 실습 교구</div>
+        </div>
+        <p class="note">역사·국어 융합 수업지도안에 활용한 기술과 결과물입니다.</p>
       </div>
     </div>
-  
+
     <div class="work">
       <div class="txt">
         <span class="owner">이손민</span>
@@ -441,6 +516,22 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
     return 8000;
   }
 
+
+  var amStudy = document.getElementById('amStudy'), amSns = document.getElementById('amSns'), amBanner = document.getElementById('amBanner'),
+      amBack = document.getElementById('amBack'), amCount = document.getElementById('amCount'), amTimer = document.getElementById('amTimer');
+  function playAmadda(){
+    amSns.classList.add('faded'); amStudy.classList.remove('faded'); amBanner.classList.add('off-top');
+    amBack.classList.remove('press'); amCount.textContent = '3회'; amCount.classList.remove('up');
+    var sec = 42 * 60 + 17;
+    for (var i = 1; i <= 7; i++) (function(i){ later(function(){ var x = sec + i; amTimer.textContent = '00:' + String(Math.floor(x / 60) % 60).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); }, i * 300); })(i);
+    later(function(){ amStudy.classList.add('faded'); amSns.classList.remove('faded'); }, 2200);
+    later(function(){ amBanner.classList.remove('off-top'); }, 3400);
+    later(function(){ amBack.classList.add('press'); }, 5200);
+    later(function(){ amBanner.classList.add('off-top'); amSns.classList.add('faded'); amStudy.classList.remove('faded'); }, 5700);
+    later(function(){ amCount.textContent = '4회'; amCount.classList.add('up'); }, 6400);
+    return 9500;
+  }
+
   var vSteps = document.querySelectorAll('#vibeFlow .step'), vFlag = document.getElementById('vFlag'), vFix = document.getElementById('vFix');
   function playVibe(){
     vFlag.classList.add('faded'); vFix.classList.add('faded');
@@ -483,6 +574,7 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
   }
   loop(document.getElementById('hanja'), playHanja);
   loop(document.getElementById('umbrella'), playUmbrella);
+  loop(document.getElementById('amadda'), playAmadda);
   loop(document.getElementById('vibeFlow'), playVibe);
   loop(document.getElementById('metric'), playMetric);
 
