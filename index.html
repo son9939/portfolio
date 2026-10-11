@@ -132,6 +132,32 @@ section{padding-block:40px;border-top:1px solid var(--line)}
 .am-msg{margin-top:4px;font-size:12px;font-weight:600}
 .am-back{margin-top:8px;text-align:center;background:#4EC4BE;color:#fff;border-radius:10px;padding:6px 0;font-weight:600;transition:background .2s}
 .am-back.press{background:#3AA9A3}
+/* forecast chart */
+:root{--s1:#5a67d8;--s2:#0f9480;--s3:#d4831a}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--s1:#7480e0;--s2:#1d9f8a;--s3:#bd7f24}}
+:root[data-theme="dark"]{--s1:#7480e0;--s2:#1d9f8a;--s3:#bd7f24}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.chart-title{font-size:14px;font-weight:600}
+.chart-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.legend-row{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:12px;font-size:12px;color:var(--muted)}
+.legend-row span{display:inline-flex;align-items:center;gap:6px}
+.legend-row i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.country{margin-top:14px}
+.country-name{font-size:13px;font-weight:600;margin-bottom:4px}
+.bar-row{display:grid;grid-template-columns:62px minmax(0,1fr) 52px;align-items:center;gap:8px;height:20px;margin-top:2px;position:relative;outline:none}
+.bar-row .m{font-size:11px;color:var(--muted)}
+.bar-row .v{font-size:12px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
+.bar-track{height:12px;position:relative;border-left:1px solid var(--line)}
+.bar{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
+.bar-row .tip{position:absolute;left:70px;bottom:22px;background:var(--ink);color:var(--bg);font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:2}
+.bar-row:hover .tip,.bar-row:focus .tip{opacity:1}
+.chart-note{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.55}
+.chart details{margin-top:10px;font-size:12px}
+.chart summary{cursor:pointer;color:var(--celadon)}
+.chart table{border-collapse:collapse;margin-top:8px;font-variant-numeric:tabular-nums;width:100%}
+.chart th,.chart td{border-bottom:1px solid var(--line);padding:4px 6px;text-align:right}
+.chart th:first-child,.chart td:first-child{text-align:left}
+.tbl-wrap{overflow-x:auto}
 /* pipeline demo */
 .pipe{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
 .pipe-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;position:relative}
@@ -281,6 +307,46 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
 
     <div class="work">
       <div class="txt">
+        <span class="owner">류연진</span>
+        <h3>K-뷰티 국가별 수출 수요예측모델</h3>
+        <p class="meta">2025 · 미국·중국·폴란드 월별 수출액 · Python, ARIMA, Prophet, XGBoost, SHAP</p>
+        <ul>
+          <li>2004~2023년 학습, 2024년 검증, 2025.1~2026.3 테스트로 기간을 나눠 비교</li>
+          <li>환율·CPI·관세율·검색 트렌드 등 외부 변수와 계절성·시차 변수를 단계적으로 추가</li>
+          <li>XGBoost 개선으로 중국 오차율 44.9% → 32.9% → 24.5%</li>
+          <li>SHAP 분석: 미국은 직전 달 수출액, 중국은 12개월 평균, 폴란드는 CPI가 예측을 주도</li>
+        </ul>
+        <div class="links">
+          <a class="btn" href="https://colab.research.google.com/drive/1AHPww3geNzCMYYsLI2vxijacNU0-Sdcb?usp=sharing" target="_blank" rel="noopener">시계열분석 노트북 ↗</a>
+          <a class="btn" href="https://colab.research.google.com/drive/18CRJzb078xdjFqZOZ7iXaq4blGdQEHcK?usp=sharing" target="_blank" rel="noopener">XGBoost 노트북 ↗</a>
+        </div>
+      </div>
+      <figure class="chart" id="fcChart" style="margin:0" aria-label="국가별 모델 오차율(MAPE) 비교">
+        <div class="chart-title">국가별 모델 오차율 (MAPE, 낮을수록 정확)</div>
+        <div class="chart-sub">노트북 출력값 그대로 · 0~100% 축</div>
+        <div class="legend-row"><span><i style="background:var(--s1)"></i>Prophet</span><span><i style="background:var(--s2)"></i>ARIMA</span><span><i style="background:var(--s3)"></i>XGBoost (계절성+시차+가중치)</span></div>
+          <div class="country"><div class="country-name">미국</div>
+            <div class="bar-row" tabindex="0"><span class="m">Prophet</span><div class="bar-track"><div class="bar" data-w="39.74" style="width:39.74%;background:var(--s1)"></div></div><span class="v">39.7%</span><span class="tip">미국 · Prophet · MAPE 39.74% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">ARIMA</span><div class="bar-track"><div class="bar" data-w="24.61" style="width:24.61%;background:var(--s2)"></div></div><span class="v">24.6%</span><span class="tip">미국 · ARIMA · MAPE 24.61% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">XGBoost</span><div class="bar-track"><div class="bar" data-w="43.17" style="width:43.17%;background:var(--s3)"></div></div><span class="v">43.2%</span><span class="tip">미국 · XGBoost · MAPE 43.17% (테스트 2025.1~2026.3)</span></div>
+          </div>
+          <div class="country"><div class="country-name">중국</div>
+            <div class="bar-row" tabindex="0"><span class="m">Prophet</span><div class="bar-track"><div class="bar" data-w="77.92" style="width:77.92%;background:var(--s1)"></div></div><span class="v">77.9%</span><span class="tip">중국 · Prophet · MAPE 77.92% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">ARIMA</span><div class="bar-track"><div class="bar" data-w="15.89" style="width:15.89%;background:var(--s2)"></div></div><span class="v">15.9%</span><span class="tip">중국 · ARIMA · MAPE 15.89% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">XGBoost</span><div class="bar-track"><div class="bar" data-w="24.48" style="width:24.48%;background:var(--s3)"></div></div><span class="v">24.5%</span><span class="tip">중국 · XGBoost · MAPE 24.48% (테스트 2025.1~2026.3)</span></div>
+          </div>
+          <div class="country"><div class="country-name">폴란드</div>
+            <div class="bar-row" tabindex="0"><span class="m">Prophet</span><div class="bar-track"><div class="bar" data-w="57.47" style="width:57.47%;background:var(--s1)"></div></div><span class="v">57.5%</span><span class="tip">폴란드 · Prophet · MAPE 57.47% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">ARIMA</span><div class="bar-track"><div class="bar" data-w="55.83" style="width:55.83%;background:var(--s2)"></div></div><span class="v">55.8%</span><span class="tip">폴란드 · ARIMA · MAPE 55.83% (검증 2024)</span></div>
+            <div class="bar-row" tabindex="0"><span class="m">XGBoost</span><div class="bar-track"><div class="bar" data-w="83.45" style="width:83.45%;background:var(--s3)"></div></div><span class="v">83.5%</span><span class="tip">폴란드 · XGBoost · MAPE 83.45% (테스트 2025.1~2026.3)</span></div>
+          </div>
+        <figcaption class="chart-note">Prophet·ARIMA는 2024년 검증 구간, XGBoost는 2025.1~2026.3 테스트 구간 기준이라 평가 기간이 다릅니다. 같은 기간끼리의 엄밀한 비교가 아니라 각 모델의 결과를 함께 보여주는 그림입니다.</figcaption>
+        <details><summary>표로 보기</summary><div class="tbl-wrap"><table><thead><tr><th>국가</th><th>Prophet</th><th>ARIMA</th><th>XGBoost</th></tr></thead><tbody><tr><td>미국</td><td>39.74%</td><td>24.61%</td><td>43.17%</td></tr><tr><td>중국</td><td>77.92%</td><td>15.89%</td><td>24.48%</td></tr><tr><td>폴란드</td><td>57.47%</td><td>55.83%</td><td>83.45%</td></tr></tbody></table></div></details>
+      </figure>
+    </div>
+
+    <div class="work">
+      <div class="txt">
         <span class="owner">이손민</span>
         <h3>사료 강독용 한자 훈음 자동 찾기</h3>
         <p class="meta">2024 제작 · 2026 AI 연동 개선 · Google Apps Script, Gemini API</p>
@@ -410,11 +476,6 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
         <span class="owner" style="align-self:flex-start">류연진</span>
         <h3>FitNote</h3>
         <p>데이터 기반 개인 맞춤형 헬스케어 서비스 기획 및 프로토타입 개발 (2025)</p>
-      </article>
-      <article>
-        <span class="owner" style="align-self:flex-start">류연진</span>
-        <h3>K-뷰티 수출 수요예측모델</h3>
-        <p>국가별 K-뷰티 수출 수요예측모델 개발, 국가별·모델별 예측 성능 비교 (2025)</p>
       </article>
       <article>
         <span class="owner" style="align-self:flex-start">공동</span>
@@ -571,6 +632,21 @@ footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:va
       });
     }, {threshold: .35});
     io.observe(el);
+  }
+
+  var fc = document.getElementById('fcChart');
+  if (fc && 'IntersectionObserver' in window){
+    var bars = fc.querySelectorAll('.bar');
+    var fio = new IntersectionObserver(function(es){
+      es.forEach(function(e){
+        if (e.isIntersecting){
+          bars.forEach(function(b){ b.style.transition = 'none'; b.style.width = '0%'; });
+          requestAnimationFrame(function(){ requestAnimationFrame(function(){ bars.forEach(function(b, i){ b.style.transition = ''; b.style.transitionDelay = (i * 60) + 'ms'; b.style.width = b.dataset.w + '%'; }); }); });
+          fio.disconnect();
+        }
+      });
+    }, {threshold: .4});
+    fio.observe(fc);
   }
   loop(document.getElementById('hanja'), playHanja);
   loop(document.getElementById('umbrella'), playUmbrella);
