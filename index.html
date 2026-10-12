@@ -147,8 +147,8 @@ section{padding-block:40px;border-top:1px solid var(--line)}
 .bar-row .v{font-size:12px;font-family:var(--font-mono);font-variant-numeric:tabular-nums;color:var(--ink);text-align:right}
 .bar-track{height:12px;position:relative;border-left:1px solid var(--line)}
 .bar{position:absolute;left:0;top:0;bottom:0;border-radius:0 4px 4px 0;transition:width 1s cubic-bezier(.2,.8,.2,1)}
-.bar-row .tip{position:absolute;left:70px;bottom:22px;background:var(--ink);color:var(--bg);font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:2}
-.bar-row:hover .tip,.bar-row:focus .tip{opacity:1}
+.bar-row .tip{visibility:hidden;position:absolute;right:0;left:auto;max-width:100%;white-space:normal!important;bottom:22px;background:var(--ink);color:var(--bg);font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:2}
+.bar-row:hover .tip,.bar-row:focus .tip{opacity:1;visibility:visible}
 .chart-note{margin-top:14px;font-size:12px;color:var(--muted);line-height:1.55}
 .chart details{margin-top:10px;font-size:12px}
 .chart summary{cursor:pointer;color:var(--celadon)}
@@ -625,11 +625,10 @@ html{scroll-behavior:smooth}
         <div class="ai-tags"><span>생성형 AI 활용</span></div>
         <ul>
           <li>AI 진로·진학 서비스의 학습·분석용 데이터 구축</li>
-          <li>서비스 데이터 분류 (1,000건 이상)</li>
+          <li>서비스 데이터 분류</li>
           <li>AI를 활용한 탐구 콘텐츠 작성</li>
           <li>AI 분석 결과 품질 검증, 이용자 채팅 상담</li>
         </ul>
-        <p class="note">실제 데이터·개인정보·내부 자료는 담지 않았습니다.</p>
       </div>
     </div>
 
