@@ -1,1 +1,529 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ASK:ED 발문 시뮬레이터</title>
+<style>
+:root{
+  --bg:#F4F5F7; --surface:#fff; --ink:#15181D; --soft:#636B78;
+  --line:#E0E3E8; --rule:#C3C8D1; --fill:#EDEFF3; --done:#9AA2AF;
+  --t:#1F3D6B; --tbg:#E9EFF8; --s:#1E5E3C; --sbg:#E7F2EC; --warn:#A8372B;
+  --sans:'Pretendard',system-ui,-apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#101216; --surface:#171A20; --ink:#E9EBEF; --soft:#9AA2AF;
+  --line:#262A32; --rule:#39404B; --fill:#1E222A; --done:#6B7381;
+  --t:#A8C4EE; --tbg:#1A2232; --s:#8FD3AC; --sbg:#152219; --warn:#FF9C90;
+  color-scheme:dark;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+h1{font-size:1.4rem;margin:0}
+h2{font-size:1rem;margin:0}
+p{margin:0}
+.muted{color:var(--soft);font-size:.87rem}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 18px 60px;display:flex;flex-direction:column;gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+label.fld{display:flex;flex-direction:column;gap:5px;font-size:.84rem;font-weight:700;color:var(--soft)}
+input[type=text],input[type=password],select,textarea{
+  font:inherit;font-size:.92rem;font-weight:400;color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:7px;padding:9px 11px;width:100%}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--rule);background:var(--surface)}
+button{font:inherit;font-weight:700;font-size:.9rem;cursor:pointer;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink);border-radius:8px;padding:9px 17px}
+button:hover{background:var(--fill)}
+button.primary{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+button.primary:hover{opacity:.88}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.grid2{grid-template-columns:1fr}}
+.pick{display:flex;flex-wrap:wrap;gap:8px}
+.pick label{display:flex;gap:7px;align-items:flex-start;border:1px solid var(--line);border-radius:8px;
+  padding:9px 12px;cursor:pointer;background:var(--bg);font-size:.88rem;max-width:280px}
+.pick label.on{border-color:var(--rule);background:var(--surface)}
+.pick input{margin:3px 0 0}
+.pick b{display:block}
+.pick span{color:var(--soft);font-size:.8rem}
 
+.stage{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.stage{grid-template-columns:1fr}}
+.src{font-size:.85rem;line-height:1.6}
+.src h3{font-size:.8rem;margin:0 0 3px;color:var(--soft);font-weight:700}
+.src .cite{color:var(--soft);font-size:.76rem;margin-top:4px}
+.src .box{border:1px solid var(--line);border-radius:8px;padding:11px;background:var(--bg);margin-bottom:10px}
+
+#log{display:flex;flex-direction:column;gap:9px;max-height:52vh;overflow-y:auto;padding-right:4px}
+.turn{display:flex;gap:9px;align-items:flex-start}
+.who{flex:none;font-size:.74rem;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap;margin-top:2px}
+.turn.t .who{background:var(--tbg);color:var(--t)}
+.turn.s .who{background:var(--sbg);color:var(--s)}
+.turn.sys .who{background:var(--fill);color:var(--soft)}
+.bub{border:1px solid var(--line);border-radius:9px;padding:8px 11px;background:var(--surface);font-size:.93rem}
+.turn.sys .bub{background:transparent;border:none;color:var(--soft);font-size:.84rem;padding:4px 0}
+.meta{font-size:.72rem;color:var(--done);margin-top:3px}
+.flagline{font-size:.78rem;color:var(--warn);margin-top:3px}
+
+.bar{display:flex;gap:10px;align-items:flex-end}
+.bar textarea{flex:1}
+#status{font-size:.84rem;color:var(--soft);min-height:1.3em}
+.err{color:var(--warn)}
+details summary{cursor:pointer;font-size:.85rem;font-weight:700;color:var(--soft)}
+kbd{font:inherit;font-size:.82rem;background:var(--fill);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ASK:ED 발문 시뮬레이터</h1>
+  <p class="muted">예비교사 발문 연습용. 지금은 <b>텍스트 입력</b>만 됩니다. 마이크와 음성 출력은 2단계·3단계에서 붙습니다.</p>
+</header>
+
+<!-- ───────── 설정 ───────── -->
+<section id="setup" class="card">
+  <h2>시작하기</h2>
+
+  <div class="grid2">
+    <label class="fld">API 키
+      <input id="key" type="password" placeholder="여기에 붙여넣으세요" autocomplete="off">
+    </label>
+    <label class="fld">모델
+      <input id="model" type="text" value="gemini-3.8-flash">
+    </label>
+  </div>
+  <p class="muted">키는 이 탭에만 남고 탭을 닫으면 사라집니다. 파일에 저장되지 않습니다.</p>
+
+  <div class="grid2">
+    <label class="fld">단원 파일
+      <select id="unitSel"><option value="units/unit-a.json">units/unit-a.json</option></select>
+    </label>
+    <label class="fld">진행자 이름 (기록용)
+      <input id="runner" type="text" placeholder="이손민">
+    </label>
+  </div>
+  <details>
+    <summary>파일이 안 불러와질 때</summary>
+    <p class="muted" style="margin-top:8px">로컬에서 파일을 그냥 열면 브라우저가 다른 파일 읽기를 막습니다. GitHub Pages 주소로 여세요. 그래도 안 되면 아래로 직접 올리시면 됩니다.</p>
+    <div class="row" style="margin-top:8px">
+      <label class="fld" style="flex:1">단원 JSON<input id="unitFile" type="file" accept=".json"></label>
+      <label class="fld" style="flex:1">페르소나 JSON<input id="persFile" type="file" accept=".json"></label>
+    </div>
+  </details>
+
+  <div>
+    <h2 style="margin-bottom:8px">투입할 학생 <span class="muted" style="font-weight:400">— 3명을 고르세요</span></h2>
+    <div class="pick" id="pick"></div>
+  </div>
+
+  <div class="row">
+    <button class="primary" id="start" type="button">수업 시작</button>
+    <span id="setupMsg" class="muted"></span>
+  </div>
+</section>
+
+<!-- ───────── 수업 ───────── -->
+<section id="stage" class="stage hidden">
+  <aside class="card src">
+    <div>
+      <h2 id="uTitle"></h2>
+      <p class="muted" id="uMeta"></p>
+    </div>
+    <div id="uSources"></div>
+    <div class="row">
+      <button id="end" type="button">수업 종료</button>
+    </div>
+  </aside>
+
+  <main class="card">
+    <div id="log"></div>
+    <div class="bar">
+      <textarea id="say" placeholder="발문을 입력하고 Ctrl+Enter 또는 보내기"></textarea>
+      <button class="primary" id="send" type="button">보내기</button>
+    </div>
+    <p id="status"></p>
+    <details>
+      <summary>수동 전환 — 음성이나 응답이 안 될 때</summary>
+      <div class="row" style="margin-top:10px">
+        <select id="mSpk" style="width:auto"></select>
+        <input id="mText" type="text" placeholder="학생 답변을 직접 입력" style="flex:1;min-width:200px">
+        <button id="mAdd" type="button">학생 발화 추가</button>
+      </div>
+      <p class="muted" style="margin-top:7px">여기로 넣은 턴은 기록에 <kbd>manual</kbd>로 표시되어 분석에서 구분됩니다.</p>
+    </details>
+  </main>
+</section>
+
+<!-- ───────── 종료 ───────── -->
+<section id="done" class="card hidden">
+  <h2>기록 내보내기</h2>
+  <p class="muted">두 개를 모두 받아 두세요. JSON은 원본, TSV는 작업대에 바로 붙여넣는 형식입니다.</p>
+  <div class="row">
+    <button class="primary" id="dlJson" type="button">턴 로그 JSON 내려받기</button>
+    <button id="dlTsv" type="button">작업대용 TSV 내려받기</button>
+    <button id="again" type="button">새 수업</button>
+  </div>
+  <p class="muted" id="doneMsg"></p>
+</section>
+
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var unit = null, pers = null, chosen = [], log = [], t0 = 0, busy = false;
+
+  /* ───── 저장된 키 ───── */
+  try { var k = sessionStorage.getItem('asked_key'); if (k) $('key').value = k; } catch (e) {}
+  try { var m = localStorage.getItem('asked_model'); if (m) $('model').value = m; } catch (e) {}
+  try { var r = localStorage.getItem('asked_runner'); if (r) $('runner').value = r; } catch (e) {}
+
+  /* ───── 파일 읽기 ───── */
+  function getJSON(url) {
+    return fetch(url, { cache: 'no-store' }).then(function (r) {
+      if (!r.ok) throw new Error(url + ' — ' + r.status);
+      return r.json();
+    });
+  }
+  function readFile(input) {
+    return new Promise(function (res, rej) {
+      var f = input.files && input.files[0];
+      if (!f) return rej(new Error('파일 없음'));
+      var fr = new FileReader();
+      fr.onload = function () { try { res(JSON.parse(fr.result)); } catch (e) { rej(e); } };
+      fr.onerror = function () { rej(new Error('읽기 실패')); };
+      fr.readAsText(f, 'utf-8');
+    });
+  }
+
+  function renderPick() {
+    var box = $('pick'); box.innerHTML = '';
+    if (!pers) return;
+    pers['학생'].forEach(function (s) {
+      var lab = document.createElement('label');
+      var cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = s.code;
+      var div = document.createElement('div');
+      var b = document.createElement('b'); b.textContent = s.label + ' · ' + s.name;
+      var sp = document.createElement('span');
+      sp.textContent = s.mainR + (s.misconceptions.length ? ' / ' + s.misconceptions.join(', ') : ' / 오개념 없음');
+      div.appendChild(b); div.appendChild(sp);
+      lab.appendChild(cb); lab.appendChild(div); box.appendChild(lab);
+      cb.addEventListener('change', function () {
+        lab.classList.toggle('on', cb.checked);
+        var n = box.querySelectorAll('input:checked').length;
+        $('setupMsg').textContent = n === 3 ? '' : n + '명 선택됨 (3명 필요)';
+      });
+    });
+  }
+
+  function boot() {
+    Promise.all([
+      getJSON('personas.json').catch(function () { return null; }),
+      getJSON($('unitSel').value).catch(function () { return null; })
+    ]).then(function (a) {
+      pers = a[0]; unit = a[1];
+      renderPick();
+      if (!pers || !unit) $('setupMsg').innerHTML =
+        '<span class="err">파일을 불러오지 못했습니다. 「파일이 안 불러와질 때」를 열어 직접 올리세요.</span>';
+    });
+  }
+  boot();
+  $('unitFile').addEventListener('change', function () {
+    readFile(this).then(function (j) { unit = j; $('setupMsg').textContent = '단원 파일을 읽었습니다.'; },
+      function (e) { $('setupMsg').innerHTML = '<span class="err">단원 파일 오류: ' + e.message + '</span>'; });
+  });
+  $('persFile').addEventListener('change', function () {
+    readFile(this).then(function (j) { pers = j; renderPick(); $('setupMsg').textContent = '페르소나 파일을 읽었습니다.'; },
+      function (e) { $('setupMsg').innerHTML = '<span class="err">페르소나 파일 오류: ' + e.message + '</span>'; });
+  });
+
+  /* ───── 시스템 프롬프트 ───── */
+  function buildSystem() {
+    var L = [];
+    L.push('너는 고등학교 역사 수업에 참여하는 학생 ' + chosen.length + '명을 동시에 연기한다.');
+    L.push('수업하는 사람은 교생 선생님이다. 너는 교사가 아니라 학생이다.');
+    L.push('');
+    L.push('[수업 조건]');
+    L.push('- 교과·학년: ' + unit.grade);
+    L.push('- 단원: ' + unit.unit);
+    L.push('- 오늘 주제: ' + unit.title);
+    L.push('- 성취기준: ' + unit.standard);
+    L.push('- 학습 목표: ' + unit.objective);
+    L.push('- 요구 활동: ' + unit.activity);
+    L.push('- 수업 시간: 약 ' + unit.minutes + '분');
+    if (unit.background) L.push('- 배경: ' + unit.background);
+    L.push('');
+    L.push('[교사가 제시할 수 있는 자료]');
+    L.push('아래 자료는 교사가 화면이나 활동지로 제시했을 때에만 언급할 수 있다. 교사가 꺼내지 않았으면 모르는 척한다.');
+    (unit.sources || []).forEach(function (s) {
+      L.push('── ' + s.id + ' (' + s.label + ') · ' + s.cite);
+      L.push(s.text);
+    });
+    L.push('');
+    L.push('[모든 학생에게 공통]');
+    L.push(pers['공통'].join('\n'));
+    L.push('');
+    L.push('[반응 상승·하강 규칙]');
+    L.push(pers['상승하강규칙'].join('\n'));
+    L.push('');
+    L.push('[오늘 교실에 있는 학생]');
+    chosen.forEach(function (s) {
+      L.push('── ' + s.code + '번 ' + s.label + ' · ' + s.name + ' (' + s.gender + ', ' + s.no + ')');
+      L.push(s.prompt.join('\n'));
+      L.push('배정 오개념: ' + (s.misconceptions.length ? s.misconceptions.join(' / ') : '없음'));
+    });
+    L.push('');
+    L.push('[출력 형식]');
+    L.push('교사의 발화 하나에 대해 반드시 JSON 하나만 낸다. 설명이나 마크다운을 붙이지 않는다.');
+    L.push('- speaker: 답하는 학생의 번호 문자열. 아무도 답하지 않으면 null.');
+    L.push('- text: 그 학생이 실제로 입 밖에 내는 말. speaker가 null이면 빈 문자열.');
+    L.push('- misconception: 이 발화에 오개념이 드러났다면 그 코드(예: "M4"), 아니면 null.');
+    L.push('- addressed: 직전 교사 발화가 아직 남아 있던 오개념을 근거를 들어 바로잡았으면 그 코드, 아니면 null.');
+    L.push('- note: 코더가 참고할 한 줄 메모. 침묵이면 왜 침묵인지.');
+    L.push('');
+    L.push('아무도 답하지 않는 것이 기본값이다. 전체에게 던진 질문에는 대개 speaker를 null로 둔다.');
+    return L.join('\n');
+  }
+
+  function liveState() {
+    var open = [];
+    log.forEach(function (x) { if (x.role === 'student' && x.misconception) open.push(x.misconception); });
+    log.forEach(function (x) {
+      if (x.addressed) { var i = open.indexOf(x.addressed); if (i >= 0) open.splice(i, 1); }
+    });
+    if (!open.length) return '';
+    return '\n\n[지금 상태] 교사가 아직 바로잡지 않은 오개념: ' + open.join(', ') +
+           '. 기회가 오면 이 전제를 다시 꺼내 말하라. (상승·하강 규칙 4)';
+  }
+
+  /* ───── 용어 보정 ───── */
+  function correct(raw) {
+    var g = (unit && unit.glossary) || {}, text = raw, hits = [], flags = [];
+    (g.auto || []).slice().sort(function (a, b) { return b.from.length - a.from.length; })
+      .forEach(function (r) {
+        if (text.indexOf(r.from) >= 0) { text = text.split(r.from).join(r.to); hits.push(r.from + '→' + r.to); }
+      });
+    (g.check || []).forEach(function (r) {
+      if (text.indexOf(r.from) >= 0) flags.push(r.from + ' → 혹시 ' + r.to + '?');
+    });
+    return { raw: raw, text: text, hits: hits, flags: flags };
+  }
+
+  /* ───── Gemini 호출 ───── */
+  function callModel(teacherText) {
+    var key = $('key').value.trim(), model = $('model').value.trim();
+    var contents = [];
+    log.forEach(function (x) {
+      if (x.role === 'teacher') contents.push({ role: 'user', parts: [{ text: x.text }] });
+      else if (x.role === 'student') contents.push({ role: 'model', parts: [{ text: JSON.stringify({
+        speaker: x.speaker, text: x.text, misconception: x.misconception || null,
+        addressed: x.addressed || null, note: x.note || '' }) }] });
+    });
+    contents.push({ role: 'user', parts: [{ text: teacherText }] });
+
+    var body = {
+      systemInstruction: { parts: [{ text: buildSystem() + liveState() }] },
+      contents: contents,
+      generationConfig: {
+        temperature: 0.9,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'OBJECT',
+          properties: {
+            speaker: { type: 'STRING', nullable: true },
+            text: { type: 'STRING' },
+            misconception: { type: 'STRING', nullable: true },
+            addressed: { type: 'STRING', nullable: true },
+            note: { type: 'STRING' }
+          },
+          required: ['speaker', 'text']
+        }
+      }
+    };
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+              encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function (r) {
+        return r.text().then(function (txt) {
+          if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + txt.slice(0, 300));
+          var j = JSON.parse(txt);
+          var c = j.candidates && j.candidates[0];
+          if (!c) throw new Error('응답에 candidates가 없습니다 — ' + txt.slice(0, 300));
+          var part = c.content && c.content.parts && c.content.parts[0];
+          if (!part || !part.text) throw new Error('응답이 비었습니다 (사유: ' + (c.finishReason || '?') + ')');
+          return JSON.parse(part.text);
+        });
+      });
+  }
+
+  /* ───── 화면 ───── */
+  function stamp() {
+    var s = Math.floor((Date.now() - t0) / 1000);
+    var mm = String(Math.floor(s / 60)).padStart(2, '0'), ss = String(s % 60).padStart(2, '0');
+    return mm + ':' + ss;
+  }
+  function nameOf(code) {
+    for (var i = 0; i < chosen.length; i++) if (chosen[i].code === String(code)) return chosen[i].label + ' ' + chosen[i].name;
+    return code;
+  }
+  function paint(entry) {
+    var d = document.createElement('div');
+    d.className = 'turn ' + (entry.role === 'teacher' ? 't' : entry.role === 'student' ? 's' : 'sys');
+    var w = document.createElement('span'); w.className = 'who';
+    w.textContent = entry.role === 'teacher' ? '교사' : entry.role === 'student' ? nameOf(entry.speaker) : '—';
+    var b = document.createElement('div');
+    var bu = document.createElement('div'); bu.className = 'bub'; bu.textContent = entry.text || '(침묵)';
+    b.appendChild(bu);
+    var bits = [entry.t];
+    if (entry.manual) bits.push('수동 입력');
+    if (entry.misconception) bits.push('오개념 ' + entry.misconception);
+    if (entry.addressed) bits.push('교정 ' + entry.addressed);
+    if (entry.hits && entry.hits.length) bits.push('보정 ' + entry.hits.join(', '));
+    if (entry.note) bits.push(entry.note);
+    var mt = document.createElement('div'); mt.className = 'meta'; mt.textContent = bits.join(' · ');
+    b.appendChild(mt);
+    if (entry.flags && entry.flags.length) {
+      var f = document.createElement('div'); f.className = 'flagline';
+      f.textContent = '확인 필요 — ' + entry.flags.join(' / ');
+      b.appendChild(f);
+    }
+    d.appendChild(w); d.appendChild(b);
+    $('log').appendChild(d);
+    $('log').scrollTop = $('log').scrollHeight;
+  }
+
+  /* ───── 시작 ───── */
+  $('start').addEventListener('click', function () {
+    var key = $('key').value.trim();
+    var boxes = $('pick').querySelectorAll('input:checked');
+    if (!key) return ($('setupMsg').innerHTML = '<span class="err">API 키를 넣으세요.</span>');
+    if (!unit || !pers) return ($('setupMsg').innerHTML = '<span class="err">단원·페르소나 파일을 먼저 불러오세요.</span>');
+    if (boxes.length !== 3) return ($('setupMsg').innerHTML = '<span class="err">학생을 정확히 3명 고르세요.</span>');
+
+    try { sessionStorage.setItem('asked_key', key); } catch (e) {}
+    try { localStorage.setItem('asked_model', $('model').value.trim());
+          localStorage.setItem('asked_runner', $('runner').value.trim()); } catch (e) {}
+
+    var codes = Array.prototype.map.call(boxes, function (b) { return b.value; });
+    chosen = pers['학생'].filter(function (s) { return codes.indexOf(s.code) >= 0; });
+
+    $('uTitle').textContent = unit.title;
+    $('uMeta').textContent = unit.grade + ' · ' + unit.minutes + '분 · 과제 ' + unit.task;
+    var sb = $('uSources'); sb.innerHTML = '';
+    (unit.sources || []).forEach(function (s) {
+      var box = document.createElement('div'); box.className = 'box';
+      var h = document.createElement('h3'); h.textContent = s.id + ' — ' + s.label;
+      var p = document.createElement('p'); p.textContent = s.text;
+      var c = document.createElement('p'); c.className = 'cite'; c.textContent = s.cite;
+      box.appendChild(h); box.appendChild(p); box.appendChild(c); sb.appendChild(box);
+    });
+    var ms = $('mSpk'); ms.innerHTML = '';
+    chosen.forEach(function (s) {
+      var o = document.createElement('option'); o.value = s.code; o.textContent = s.label + ' ' + s.name; ms.appendChild(o);
+    });
+
+    log = []; t0 = Date.now();
+    $('log').innerHTML = '';
+    $('setup').classList.add('hidden'); $('done').classList.add('hidden');
+    $('stage').classList.remove('hidden');
+    paint({ role: 'sys', t: '00:00', text: '수업을 시작했습니다. 학생 — ' + chosen.map(function (s) { return s.label; }).join(', ') });
+    $('say').focus();
+  });
+
+  /* ───── 보내기 ───── */
+  function send() {
+    if (busy) return;
+    var raw = $('say').value.trim();
+    if (!raw) return;
+    var c = correct(raw);
+    var entry = { turn: log.length + 1, t: stamp(), role: 'teacher',
+                  raw: c.raw, text: c.text, hits: c.hits, flags: c.flags, manual: false };
+    log.push(entry); paint(entry);
+    $('say').value = '';
+    busy = true; $('send').disabled = true; $('status').textContent = '학생들이 생각하는 중…';
+
+    callModel(c.text).then(function (r) {
+      var st = { turn: log.length + 1, t: stamp(), role: 'student',
+                 speaker: r.speaker || null, text: r.text || '',
+                 misconception: r.misconception || null, addressed: r.addressed || null,
+                 note: r.note || '', manual: false };
+      log.push(st);
+      if (st.speaker) paint(st);
+      else paint({ role: 'sys', t: st.t, text: '(아무도 답하지 않음)' + (st.note ? ' — ' + st.note : '') });
+      $('status').textContent = '';
+    }).catch(function (e) {
+      $('status').innerHTML = '<span class="err">응답 실패 — ' + String(e.message).replace(/</g, '&lt;') +
+        '<br>아래 「수동 전환」으로 학생 답변을 직접 넣고 계속하세요.</span>';
+    }).then(function () { busy = false; $('send').disabled = false; });
+  }
+  $('send').addEventListener('click', send);
+  $('say').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send(); }
+  });
+
+  /* ───── 수동 전환 ───── */
+  $('mAdd').addEventListener('click', function () {
+    var txt = $('mText').value.trim(); if (!txt) return;
+    var st = { turn: log.length + 1, t: stamp(), role: 'student', speaker: $('mSpk').value,
+               text: txt, misconception: null, addressed: null, note: '', manual: true };
+    log.push(st); paint(st); $('mText').value = '';
+  });
+
+  /* ───── 종료·내보내기 ───── */
+  $('end').addEventListener('click', function () {
+    $('stage').classList.add('hidden'); $('done').classList.remove('hidden');
+    var nT = log.filter(function (x) { return x.role === 'teacher'; }).length;
+    var nS = log.filter(function (x) { return x.role === 'student' && x.speaker; }).length;
+    $('doneMsg').textContent = '교사 발화 ' + nT + '건, 학생 응답 ' + nS + '건, 총 ' + stamp() + ' 진행.';
+  });
+  $('again').addEventListener('click', function () {
+    $('done').classList.add('hidden'); $('setup').classList.remove('hidden');
+  });
+
+  function download(name, text, mime) {
+    var blob = new Blob(['﻿' + text], { type: (mime || 'text/plain') + ';charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function fname(ext) {
+    var d = new Date(), p = function (n) { return String(n).padStart(2, '0'); };
+    return 'asked_' + (unit ? unit.id : 'unit') + '_' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) +
+           '_' + p(d.getHours()) + p(d.getMinutes()) + '.' + ext;
+  }
+  $('dlJson').addEventListener('click', function () {
+    download(fname('json'), JSON.stringify({
+      runner: $('runner').value.trim(), model: $('model').value.trim(),
+      unit: unit ? { id: unit.id, task: unit.task, title: unit.title } : null,
+      students: chosen.map(function (s) { return { code: s.code, label: s.label, name: s.name }; }),
+      startedAt: new Date(t0).toISOString(), turns: log
+    }, null, 2), 'application/json');
+  });
+  $('dlTsv').addEventListener('click', function () {
+    // 작업대 형식: 맥락 ⇥ 직전 학생 발화 ⇥ 교사 발문 ⇥ 학생 반응
+    var rows = [], prevStudent = '';
+    for (var i = 0; i < log.length; i++) {
+      var x = log[i];
+      if (x.role !== 'teacher') continue;
+      var resp = '';
+      for (var j = i + 1; j < log.length; j++) {
+        if (log[j].role === 'teacher') break;
+        if (log[j].role === 'student' && log[j].speaker) {
+          resp = nameOf(log[j].speaker) + ': ' + log[j].text; break;
+        }
+      }
+      var ctx = (unit ? unit.title : '') + ' · ' + x.t;
+      rows.push([ctx, prevStudent, x.text, resp].join('\t'));
+      prevStudent = resp;
+    }
+    download(fname('tsv'), rows.join('\n'), 'text/tab-separated-values');
+  });
+})();
+</script>
+</body>
+</html>
